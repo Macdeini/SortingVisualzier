@@ -95,7 +95,6 @@ def main():
                 pressed.algo(screen, lst)
             elif pressed.text == randomize_button.text:
                 random.shuffle(lst)
-                draw_list(screen, lst)
     pygame.quit()
 
 
