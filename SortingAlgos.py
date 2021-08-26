@@ -83,26 +83,39 @@ def main():
     bubble_button = Button(255, 925, 100, 50, "Bubble Sort", visual_bubble_sort)
     selection_button = Button(410, 925, 100, 50, "Selection Sort", visual_selection_sort)
     insertion_button = Button(565, 925, 100, 50, "Insertion Sort", visual_insertion_sort)
-    # stop_button = Button(720, 925, 100, 50, "Stop")
     buttons = [randomize_button, bubble_button, selection_button, insertion_button]
 
+    is_sorted = False
     running = True
     while running:
         draw_list(screen, lst, None, buttons)
         pressed = get_menu_option(buttons)
         if pressed is not None:
-            if pressed.algo is not None:
-                pressed.algo(screen, lst)
+            if pressed.algo is not None and not is_sorted:
+                is_sorted = pressed.algo(screen, lst)
             elif pressed.text == randomize_button.text:
                 random.shuffle(lst)
+                is_sorted = False
+        print(is_sorted)
     pygame.quit()
 
 
 def buffer(screen, lst, delay, curr=None):
     """Draws the list during sorting and handles timing"""
-    draw_list(screen, lst, curr)
+    # Updates visuals
+    stop_button = Button(720, 925, 100, 50, "Stop")
+    draw_list(screen, lst, curr, [stop_button])
     pygame.time.wait(delay)
     pygame.event.pump()
+
+    # Checks stoppage
+    pos = (-1, -1)
+    for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONUP:
+            pos = pygame.mouse.get_pos()
+    if stop_button.left <= pos[0] <= stop_button.left+stop_button.width and stop_button.top <= pos[1] <= stop_button.top + stop_button.height:
+        return True
+    return False
 
 
 def visual_bubble_sort(screen, lst):
@@ -113,20 +126,25 @@ def visual_bubble_sort(screen, lst):
         for j in range(size-i-1):
             if lst[j] >= lst[j+1]:
                 lst[j], lst[j+1] = lst[j+1], lst[j]
-            buffer(screen, lst, DELAY, j+1)
+            if buffer(screen, lst, DELAY, j+1):
+                return False
+    return True
 
 
 def visual_selection_sort(screen, lst):
     """Selection sort with modifications for visuals"""
-    DELAY = 25
+    DELAY = 30
     for i in range(len(lst)):
         min_idx = i
-        buffer(screen, lst, DELAY, i)
+        if buffer(screen, lst, DELAY, i):
+            return False
         for j in range(i+1, len(lst)):
             if lst[min_idx] > lst[j]:
                 min_idx = j
         lst[i], lst[min_idx] = lst[min_idx], lst[i]
-        buffer(screen, lst, DELAY, min_idx)
+        if buffer(screen, lst, DELAY, min_idx):
+            return False
+    return True
 
 
 def visual_insertion_sort(screen, lst):
@@ -135,12 +153,15 @@ def visual_insertion_sort(screen, lst):
     for i in range(1, len(lst)):
         key = lst[i]
         j = i-1
-        buffer(screen, lst, DELAY, i)
+        if buffer(screen, lst, DELAY, i):
+            return False
         while j >= 0 and key < lst[j]:
             lst[j + 1] = lst[j]
             j -= 1
         lst[j + 1] = key
-        buffer(screen, lst, DELAY, j+1)
+        if buffer(screen, lst, DELAY, j+1):
+            return False
+    return True
 
 
 if __name__ == '__main__':
